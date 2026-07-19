@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoC Verification and Automation at Arm Ltd. - Reyansh Gahlot</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --primary: #1a237e;
+  --primary-light: #283593;
+  --accent: #ff6f00;
+  --accent-light: #ff8f00;
+  --dark: #0d1117;
+  --gray: #f8f9fa;
+  --text: #212121;
+  --text-light: #616161;
+  --success: #2e7d32;
+  --white: #ffffff;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #000; overflow: hidden; }
+.slide {
+  width: 100vw; height: 100vh; display: none; position: relative;
+  padding: 60px 80px; overflow: hidden;
+}
+.slide.active { display: flex; flex-direction: column; }
+/* Slide backgrounds */
+.bg-dark { background: linear-gradient(135deg, #0d1b2a 0%, #1b2838 50%, #1a237e 100%); color: white; }
+.bg-white { background: #ffffff; color: var(--text); }
+.bg-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+.bg-navy { background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%); color: white; }
+/* Typography */
+.slide-number { position: absolute; bottom: 20px; right: 40px; font-size: 14px; opacity: 0.5; }
+.slide-title {
+  font-size: 42px; font-weight: 800; margin-bottom: 40px; line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+.slide-title.small { font-size: 34px; margin-bottom: 30px; }
+.slide-subtitle { font-size: 20px; opacity: 0.8; margin-top: 8px; font-weight: 400; }
+.accent-bar { width: 80px; height: 4px; background: var(--accent); margin: 15px 0 30px 0; border-radius: 2px; }
+/* Content */
+.content { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
+.bullets { list-style: none; padding: 0; }
+.bullets li {
+  font-size: 22px; line-height: 1.6; padding: 8px 0 8px 35px; position: relative;
+}
+.bullets li::before {
+  content: ''; position: absolute; left: 0; top: 18px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+.bullets li.sub { padding-left: 60px; font-size: 19px; opacity: 0.85; }
+.bullets li.sub::before { left: 35px; width: 6px; height: 6px; background: var(--accent-light); }
+.bullets li.empty { padding: 4px; }
+.bullets li.empty::before { display: none; }
+/* Cards grid */
+.cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px; }
+.card {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 24px; backdrop-filter: blur(10px);
+}
+.bg-white .card { background: #f8f9fa; border-color: #e0e0e0; }
+.card h3 { font-size: 18px; margin-bottom: 10px; color: var(--accent); }
+.bg-white .card h3 { color: var(--primary); }
+.card p { font-size: 16px; line-height: 1.5; opacity: 0.9; }
+/* Metric boxes */
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 25px; }
+.metric {
+  text-align: center; padding: 20px 12px; border-radius: 12px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+}
+.bg-white .metric { background: var(--primary); color: white; }
+.metric .num { font-size: 36px; font-weight: 800; color: var(--accent); }
+.bg-white .metric .num { color: var(--accent-light); }
+.metric .label { font-size: 13px; margin-top: 6px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+/* Flow diagram */
+.flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 20px 0; }
+.flow-box {
+  padding: 14px 30px; border-radius: 8px; font-size: 17px; font-weight: 600;
+  text-align: center; min-width: 500px; color: white;
+}
+.flow-arrow { font-size: 24px; color: var(--accent); margin: 4px 0; }
+.bg-white .flow-arrow { color: var(--primary); }
+/* Table */
+table.data { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 17px; }
+table.data th { background: var(--primary); color: white; padding: 12px 16px; text-align: left; }
+table.data td { padding: 10px 16px; border-bottom: 1px solid #e0e0e0; }
+table.data tr:nth-child(even) td { background: #f5f7ff; }
+/* Title slide specific */
+.title-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.title-content h1 { font-size: 52px; font-weight: 900; letter-spacing: -1px; margin-bottom: 20px; }
+.title-content .meta { font-size: 20px; opacity: 0.8; line-height: 1.8; margin-top: 30px; }
+.title-content .org { font-size: 24px; margin-top: 15px; padding: 10px 25px; background: rgba(255,111,0,0.2); border-radius: 8px; border: 1px solid rgba(255,111,0,0.4); }
+/* Navigation */
+.nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 100; }
+.nav button { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.nav button:hover { background: var(--accent); }
+.dot-nav { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; }
+.dot.active { background: var(--accent); transform: scale(1.3); }
+/* Tag */
+.tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-right: 8px; margin-bottom: 6px; }
+.tag-blue { background: rgba(26,35,126,0.15); color: #1a237e; }
+.tag-green { background: rgba(46,125,50,0.15); color: #2e7d32; }
+.tag-orange { background: rgba(255,111,0,0.15); color: #e65100; }
+.bg-dark .tag-blue { background: rgba(100,150,255,0.2); color: #90caf9; }
+.bg-dark .tag-green { background: rgba(100,200,100,0.2); color: #a5d6a7; }
+.bg-dark .tag-orange { background: rgba(255,180,100,0.2); color: #ffcc80; }
+/* Two column */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.col h3 { font-size: 20px; margin-bottom: 15px; color: var(--accent); }
+.bg-white .col h3 { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: Title -->
+<div class="slide bg-dark active">
+  <div class="title-content">
+    <div class="org">Arm Ltd. | CPU Verification Group | Interconnect Team</div>
+    <h1>SoC Verification &<br>Automation</h1>
+    <div class="accent-bar" style="margin: 15px auto;"></div>
+    <div class="meta">
+      <strong>Reyansh Gahlot</strong> | 102206005<br>
+      B.E. Electronics & Communication Engineering<br>
+      Thapar Institute of Engineering & Technology, Patiala<br><br>
+      <span style="opacity:0.6">January 2026 – June 2026</span>
+    </div>
+  </div>
+  <div class="slide-number">1 / 16</div>
+</div>
+
+<!-- SLIDE 2: Agenda -->
+<div class="slide bg-white">
+  <div class="slide-title small">Agenda<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="cards" style="grid-template-columns: repeat(2, 1fr);">
+      <div class="card"><h3>01</h3><p>Organisation & CMN Architecture</p></div>
+      <div class="card"><h3>02</h3><p>Project 1: Status Register Checker</p></div>
+      <div class="card"><h3>03</h3><p>Project 2: Compile Warning Resolution</p></div>
+      <div class="card"><h3>04</h3><p>Project 3: CMN Clock Controller</p></div>
+      <div class="card"><h3>05</h3><p>Project 4: AI Agent for Code Generation</p></div>
+      <div class="card"><h3>06</h3><p>Results, SDG Impact & Conclusion</p></div>
+    </div>
+  </div>
+  <div class="slide-number" style="color:#999">2 / 16</div>
+</div>
+
+<!-- SLIDE 3: Organisation -->
+<div class="slide bg-dark">
+  <div class="slide-title small">Organisation & Team<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="two-col">
+      <div class="col">
+        <h3>Arm Ltd.</h3>
+        <ul class="bullets">
+          <li>World's leading semiconductor IP company</li>
+          <li>Powers 99%+ of smartphones globally</li>
+          <li>IP licensing model → partners fabricate chips</li>
+          <li>Bangalore: CPU Verification Group</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>Interconnect Team</h3>
+        <ul class="bullets">
+          <li>CMN (Coherent Mesh Network) verification</li>
+          <li>~50 engineers (verification + design)</li>
+          <li>UVM 1.2 + SystemVerilog methodology</li>
+          <li>Synopsys VCS + Verdi + VC Formal</li>
+        </ul>
+      </div>
+    </div>
+    <div style="margin-top:30px;">
+      <span class="tag tag-blue">SystemVerilog</span>
+      <span class="tag tag-blue">UVM 1.2</span>
+      <span class="tag tag-green">AXI4</span>
+      <span class="tag tag-green">CHI</span>
+      <span class="tag tag-green">APB</span>
+      <span class="tag tag-orange">Python</span>
+      <span class="tag tag-orange">VCS</span>
+      <span class="tag tag-orange">Verdi</span>
+    </div>
+  </div>
+  <div class="slide-number">3 / 16</div>
+</div>
+
+<!-- SLIDE 4: CMN Architecture -->
+<div class="slide bg-white">
+  <div class="slide-title small">Coherent Mesh Network (CMN)<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="two-col">
+      <div class="col">
+        <h3>Architecture</h3>
+        <ul class="bullets">
+          <li>2D mesh topology (scalable 2x2 to 12x12)</li>
+          <li>Cross-Points (XP) form routing fabric</li>
+          <li>CHI protocol for coherency</li>
+          <li>System Level Cache (SLC) at Home Nodes</li>
+          <li>Dynamic clock gating for power management</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>Node Types</h3>
+        <ul class="bullets">
+          <li><strong>RN-F:</strong> CPU cores (full coherent)</li>
+          <li><strong>RN-I:</strong> GPU, DMA (I/O coherent)</li>
+          <li><strong>HN-F:</strong> Home Node (coherency point)</li>
+          <li><strong>SN-F:</strong> Memory controllers</li>
+          <li><strong>XP:</strong> Cross-point routers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number" style="color:#999">4 / 16</div>
+</div>
+
+<!-- SLIDE 5: Project 1 -->
+<div class="slide bg-dark">
+  <div class="slide-title small">Project 1: Status Register Checker<div class="accent-bar"></div></div>
+  <div class="content">
+    <p style="font-size:18px;opacity:0.8;margin-bottom:20px;">Automated verification of debug/trace status registers — cycle-accurate RTL vs model comparison</p>
+    <div class="flow">
+      <div class="flow-box" style="background:#1565c0;">Arm Fast Model → Multi-GB Simulation Log</div>
+      <div class="flow-arrow">&#x2193;</div>
+      <div class="flow-box" style="background:#2e7d32;">Python Log Parser (Streaming, Compiled Regex)</div>
+      <div class="flow-arrow">&#x2193;</div>
+      <div class="flow-box" style="background:#e65100;">sim_opts → Expected Value Database (Timestamp-Keyed)</div>
+      <div class="flow-arrow">&#x2193;</div>
+      <div class="flow-box" style="background:#6a1b9a;">UVM Scoreboard (Comparison Engine)</div>
+      <div class="flow-arrow">&#x2193;</div>
+      <div class="flow-box" style="background:#c62828;">Pass/Fail — uvm_fatal on mismatch</div>
+    </div>
+  </div>
+  <div class="slide-number">5 / 16</div>
+</div>
+
+<!-- SLIDE 6: Project 1 Details -->
+<div class="slide bg-white">
+  <div class="slide-title small">Status Register Checker — Key Innovations<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="cards">
+      <div class="card"><h3>Streaming Parser</h3><p>Processes 10 GB logs in ~20s<br>Constant memory footprint<br>Compiled regex: O(1) per line</p></div>
+      <div class="card"><h3>Timestamp-Keyed Lookup</h3><p>Not FIFO — handles reordering<br>Associative array by sim time<br>Tolerance window: ±10 units</p></div>
+      <div class="card"><h3>Factory Integration</h3><p>UVM factory override<br>Zero changes to existing code<br>Enable/disable per-test</p></div>
+      <div class="card"><h3>Bug Found!</h3><p>TRACE_ACTIVE not deasserting<br>on buffer-full condition<br>Pre-existing across tape-outs</p></div>
+    </div>
+    <div class="metrics" style="margin-top:25px;">
+      <div class="metric"><div class="num">50K+</div><div class="label">Checks/Regression</div></div>
+      <div class="metric"><div class="num">0</div><div class="label">False Positives</div></div>
+      <div class="metric"><div class="num">500MB/s</div><div class="label">Parse Throughput</div></div>
+      <div class="metric"><div class="num">1</div><div class="label">Pre-existing Bug</div></div>
+    </div>
+  </div>
+  <div class="slide-number" style="color:#999">6 / 16</div>
+</div>
+
+<!-- SLIDE 7: Project 2 -->
+<div class="slide bg-dark">
+  <div class="slide-title small">Project 2: Compile Warning Resolution<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="two-col">
+      <div class="col">
+        <h3>The Problem</h3>
+        <ul class="bullets">
+          <li><strong>153 warnings</strong> across 47 files</li>
+          <li>8 different build configurations</li>
+          <li>Real bugs hidden in warning noise</li>
+          <li>Arm mandates zero-warning policy</li>
+        </ul>
+        <h3 style="margin-top:25px;">Categories</h3>
+        <ul class="bullets">
+          <li>Unused variables: 42 (27.5%)</li>
+          <li>Type conversions: 35 (22.9%)</li>
+          <li>Deprecated: 28 (18.3%)</li>
+          <li>Uninitialised: 23 (15.0%) ⚠️ HIGH</li>
+          <li>Port width: 16 (10.5%) ⚠️ HIGH</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>6-Step Methodology</h3>
+        <div class="flow" style="align-items:flex-start;">
+          <div class="flow-box" style="background:#c62828;min-width:300px;font-size:15px;">1. Categorise & Prioritise</div>
+          <div class="flow-arrow">&#x2193;</div>
+          <div class="flow-box" style="background:#e65100;min-width:300px;font-size:15px;">2. Root Cause Analysis</div>
+          <div class="flow-arrow">&#x2193;</div>
+          <div class="flow-box" style="background:#1565c0;min-width:300px;font-size:15px;">3. Minimal Change Fix</div>
+          <div class="flow-arrow">&#x2193;</div>
+          <div class="flow-box" style="background:#2e7d32;min-width:300px;font-size:15px;">4. Targeted Verification</div>
+          <div class="flow-arrow">&#x2193;</div>
+          <div class="flow-box" style="background:#6a1b9a;min-width:300px;font-size:15px;">5. Full Regression (8 configs)</div>
+          <div class="flow-arrow">&#x2193;</div>
+          <div class="flow-box" style="background:#1a237e;min-width:300px;font-size:15px;">6. Code Review & Merge</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">7 / 16</div>
+</div>
+
+<!-- SLIDE 8: Project 3 -->
+<div class="slide bg-white">
+  <div class="slide-title small">Project 3: CMN Clock Controller Integration<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="two-col">
+      <div class="col">
+        <h3>5 Clock Domains</h3>
+        <table class="data" style="font-size:15px;">
+          <tr><th>Domain</th><th>Freq</th><th>Gatable</th></tr>
+          <tr><td>clk_mesh</td><td>2.0 GHz</td><td>Yes</td></tr>
+          <tr><td>clk_device</td><td>1.5 GHz</td><td>Yes</td></tr>
+          <tr><td>clk_slc</td><td>1.8 GHz</td><td>Yes</td></tr>
+          <tr><td>clk_debug</td><td>500 MHz</td><td>Yes</td></tr>
+          <tr><td>clk_aon</td><td>100 MHz</td><td>No</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <h3>State Machine (6 states)</h3>
+        <div class="flow" style="align-items:flex-start;">
+          <div class="flow-box" style="background:#2e7d32;min-width:250px;font-size:14px;">RUNNING</div>
+          <div class="flow-arrow">&#x2193;</div>
+          <div class="flow-box" style="background:#e65100;min-width:250px;font-size:14px;">GATE_REQUEST</div>
+          <div class="flow-arrow">&#x2193;</div>
+          <div class="flow-box" style="background:#c62828;min-width:250px;font-size:14px;">GATED</div>
+          <div class="flow-arrow">&#x2193;</div>
+          <div class="flow-box" style="background:#6a1b9a;min-width:250px;font-size:14px;">WAKE_REQUEST</div>
+          <div class="flow-arrow">&#x2193;</div>
+          <div class="flow-box" style="background:#1565c0;min-width:250px;font-size:14px;">RESTORING</div>
+          <div class="flow-arrow">&#x2193;</div>
+          <div class="flow-box" style="background:#2e7d32;min-width:250px;font-size:14px;">RUNNING</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number" style="color:#999">8 / 16</div>
+</div>
+
+<!-- SLIDE 9: Project 3 CDC & Bugs -->
+<div class="slide bg-dark">
+  <div class="slide-title small">Clock Controller — CDC & Bug Discoveries<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="two-col">
+      <div class="col">
+        <h3>CDC Verification (14 paths)</h3>
+        <ul class="bullets">
+          <li><strong>Structural:</strong> VC Formal analysis</li>
+          <li><strong>Functional:</strong> UVM stress tests</li>
+          <li><strong>Formal:</strong> Mathematical proofs</li>
+          <li>Sync types: 2-FF, Gray code, Handshake, FIFO</li>
+          <li>Q-Channel protocol to system PMU</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>Bugs Found (Severity 2)</h3>
+        <div class="card" style="margin-bottom:15px;border-left:4px solid #c62828;">
+          <h3 style="color:#ff5252;">Bug 1: Missing Synchroniser</h3>
+          <p>CDC-12: clk_debug → clk_mesh<br>No 2-FF sync stage present<br>Found by structural CDC analysis</p>
+        </div>
+        <div class="card" style="border-left:4px solid #e65100;">
+          <h3 style="color:#ff9100;">Bug 2: Snoop Priority Error</h3>
+          <p>FSM aborts gate on snoop, but<br>QACCEPTn not deasserted → PMU<br>state corruption, permanent clock-on</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">9 / 16</div>
+</div>
+
+<!-- SLIDE 10: Project 4 Architecture -->
+<div class="slide bg-navy">
+  <div class="slide-title small">Project 4: AI Agent for HW Code Generation<div class="accent-bar"></div></div>
+  <div class="content">
+    <p style="font-size:18px;opacity:0.8;margin-bottom:20px;">Automatically generates hardware programming code when new RTL arrives</p>
+    <div class="flow">
+      <div class="flow-box" style="background:#1565c0;">Stage 1: RTL Parsing — Extract Register Map from SystemVerilog</div>
+      <div class="flow-arrow">&#x2193;</div>
+      <div class="flow-box" style="background:#2e7d32;">Stage 2: Context Retrieval — RAG from Specification Database</div>
+      <div class="flow-arrow">&#x2193;</div>
+      <div class="flow-box" style="background:#6a1b9a;">Stage 3: LLM Code Generation — Structured Prompts + Constraints</div>
+      <div class="flow-arrow">&#x2193;</div>
+      <div class="flow-box" style="background:#e65100;">Stage 4: Validation — Cross-check Addresses Against RTL</div>
+    </div>
+    <div style="margin-top:25px;text-align:center;opacity:0.8;font-size:16px;">
+      Integrated into CI/CD → Triggers on RTL commit → Generates PR for review
+    </div>
+  </div>
+  <div class="slide-number">10 / 16</div>
+</div>
+
+<!-- SLIDE 11: Project 4 Results -->
+<div class="slide bg-white">
+  <div class="slide-title small">AI Agent — Results<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-bottom:30px;">
+      <div class="metric"><div class="num">40x</div><div class="label">Faster</div></div>
+      <div class="metric"><div class="num">0</div><div class="label">Address Errors</div></div>
+      <div class="metric"><div class="num">4,200</div><div class="label">Lines Generated</div></div>
+      <div class="metric"><div class="num">3</div><div class="label">IP Blocks Deployed</div></div>
+    </div>
+    <table class="data">
+      <tr><th>Metric</th><th>Manual</th><th>AI Agent</th><th>Improvement</th></tr>
+      <tr><td>Time per IP block</td><td>2-3 days</td><td>&lt; 1 hour</td><td>40x faster</td></tr>
+      <tr><td>Register address errors</td><td>2-5 per block</td><td>0</td><td>100% elimination</td></tr>
+      <tr><td>Code coverage (regs)</td><td>85-90%</td><td>99%</td><td>+10-14%</td></tr>
+      <tr><td>Review iterations</td><td>3-4 rounds</td><td>1-2 rounds</td><td>60% reduction</td></tr>
+      <tr><td>Engineer hours saved</td><td>16-24 hrs</td><td>1-2 hrs</td><td>~90% reduction</td></tr>
+    </table>
+    <p style="margin-top:15px;font-size:16px;color:#666;">Key: Ground-truth validation prevents hallucination • Human-in-the-loop (PR review) • Confidence scoring</p>
+  </div>
+  <div class="slide-number" style="color:#999">11 / 16</div>
+</div>
+
+<!-- SLIDE 12: Summary Results -->
+<div class="slide bg-dark">
+  <div class="slide-title small">Summary of Results<div class="accent-bar"></div></div>
+  <div class="content">
+    <table class="data" style="color:white;">
+      <tr><th>Project</th><th>Key Deliverable</th><th>Impact</th><th>Bugs</th></tr>
+      <tr style="color:white;"><td>Status Register Checker</td><td>Automated UVM checker</td><td>50K+ checks/run</td><td>1</td></tr>
+      <tr style="color:white;"><td>Compile Warnings</td><td>Zero-warning codebase</td><td>153 → 0</td><td>0 (prevention)</td></tr>
+      <tr style="color:white;"><td>Clock Controller</td><td>Verification closure</td><td>14 CDC verified</td><td>2</td></tr>
+      <tr style="color:white;"><td>AI Agent</td><td>Code generation tool</td><td>40x time reduction</td><td>N/A</td></tr>
+    </table>
+    <div class="metrics" style="margin-top:30px;">
+      <div class="metric"><div class="num">3</div><div class="label">RTL Bugs Found<br>(Severity 2)</div></div>
+      <div class="metric"><div class="num">$3-10M</div><div class="label">Re-spin Cost<br>Avoided</div></div>
+      <div class="metric"><div class="num">200</div><div class="label">Engineer Hours<br>Saved/Year</div></div>
+      <div class="metric"><div class="num">Billions</div><div class="label">Devices Using<br>Verified Silicon</div></div>
+    </div>
+  </div>
+  <div class="slide-number">12 / 16</div>
+</div>
+
+<!-- SLIDE 13: SDG -->
+<div class="slide bg-white">
+  <div class="slide-title small">Impact Analysis — UN Sustainable Development Goals<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="two-col">
+      <div class="col">
+        <h3>SDG 9: Industry, Innovation & Infrastructure</h3>
+        <ul class="bullets">
+          <li>Verified silicon powers global digital infrastructure</li>
+          <li>AI agent fosters innovation in semiconductor workflows</li>
+          <li>Reliable processors for healthcare, finance, transport</li>
+          <li>Accelerates time-to-market for new designs</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>SDG 12: Responsible Consumption & Production</h3>
+        <ul class="bullets">
+          <li>3 bugs caught → avoids wasteful re-spins</li>
+          <li>Clock gating → 15-30% power reduction</li>
+          <li>Bug at sim: $1 | fab: $1M | deployed: $1B</li>
+          <li>Extends battery life → reduces e-waste</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number" style="color:#999">13 / 16</div>
+</div>
+
+<!-- SLIDE 14: Challenges -->
+<div class="slide bg-dark">
+  <div class="slide-title small">Challenges & Key Learnings<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="cards" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="card"><h3>Technical</h3><p>800-page CHI spec<br>Timestamp sync iterations<br>CDC formal tools<br>AI hallucination control</p></div>
+      <div class="card"><h3>Process</h3><p>500K+ line codebase<br>Regression on "trivial" fix<br>Multi-config validation<br>Code review discipline</p></div>
+      <div class="card"><h3>Professional</h3><p>Agile workflow<br>Multi-stakeholder coordination<br>Effort estimation<br>Industry-standard practices</p></div>
+    </div>
+    <div style="margin-top:30px; padding:20px; background:rgba(255,111,0,0.1); border-radius:10px; border-left:4px solid var(--accent);">
+      <p style="font-size:18px;"><strong>Key Insight:</strong> Automated infrastructure provides lasting value — amortised ROI across all future regressions. AI + validation = trust.</p>
+    </div>
+  </div>
+  <div class="slide-number">14 / 16</div>
+</div>
+
+<!-- SLIDE 15: Future Scope -->
+<div class="slide bg-white">
+  <div class="slide-title small">Future Scope<div class="accent-bar"></div></div>
+  <div class="content">
+    <div class="cards" style="grid-template-columns: repeat(2, 1fr);">
+      <div class="card"><h3>Status Checker</h3><p>Performance counter verification<br>Formal reg spec checking<br>Coverage-driven register testing</p></div>
+      <div class="card"><h3>Clock Controller</h3><p>DVFS interaction verification<br>ML-based CDC scenario generation<br>Power-aware simulation models</p></div>
+      <div class="card"><h3>AI Agent</h3><p>Generate testbench code (not just programming)<br>Multi-agent architecture<br>Simulation feedback loop</p></div>
+      <div class="card"><h3>Industry Impact</h3><p>AI-verification paradigm shift<br>Applicable across Arm portfolio<br>Redefining engineer workflows</p></div>
+    </div>
+  </div>
+  <div class="slide-number" style="color:#999">15 / 16</div>
+</div>
+
+<!-- SLIDE 16: Thank You -->
+<div class="slide bg-gradient">
+  <div class="title-content">
+    <h1>Thank You</h1>
+    <div class="accent-bar" style="margin:15px auto; background:white;"></div>
+    <div class="meta" style="font-size:22px;">
+      <strong>Reyansh Gahlot</strong> | 102206005<br><br>
+      Faculty Mentor: <strong>Dr. Amit Mishra</strong> (TIET, Patiala)<br>
+      Industry Mentor: <strong>Vinod Ramanujam</strong> (Arm Ltd., Bangalore)<br><br>
+      <span style="font-size:28px;">Questions?</span>
+    </div>
+  </div>
+  <div class="slide-number">16 / 16</div>
+</div>
+
+<!-- Navigation -->
+<div class="nav">
+  <button onclick="prevSlide()">&#x2190; Prev</button>
+  <button onclick="nextSlide()">Next &#x2192;</button>
+</div>
+<div class="dot-nav" id="dots"></div>
+
+<script>
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const dotsContainer = document.getElementById('dots');
+
+// Create dots
+slides.forEach((_, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'dot' + (i === 0 ? ' active' : '');
+  dot.onclick = () => goToSlide(i);
+  dotsContainer.appendChild(dot);
+});
+
+function goToSlide(n) {
+  slides[current].classList.remove('active');
+  document.querySelectorAll('.dot')[current].classList.remove('active');
+  current = n;
+  slides[current].classList.add('active');
+  document.querySelectorAll('.dot')[current].classList.add('active');
+}
+function nextSlide() { if (current < slides.length - 1) goToSlide(current + 1); }
+function prevSlide() { if (current > 0) goToSlide(current - 1); }
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+  if (e.key === 'ArrowLeft') prevSlide();
+});
+</script>
+</body>
+</html>
